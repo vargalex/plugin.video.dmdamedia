@@ -1,4 +1,7 @@
-﻿[B]1.0.1[/B]
+﻿[B]1.0.2[/B]
+- Forrás változás követése
+
+[B]1.0.1[/B]
 - Átállás urlresolver-re
 
 [B]1.0.0[/B]
