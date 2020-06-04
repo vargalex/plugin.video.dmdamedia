@@ -74,7 +74,8 @@ class navigator:
 
     def getSeries(self, url, thumb):
         url_content = client.request('%s%s' %(base_url, url))
-        title = client.replaceHTMLCodes(client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]).encode('utf-8').strip()
+        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
+        title = client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0]).encode('utf-8').strip()
         panel = client.parseDOM(url_content, 'div', attrs={'class': 'panel'})[0]
         poster = client.parseDOM(panel, 'div', attrs={'class': 'poster'})[0]
         banner = '%s/%s' % (poster, client.parseDOM(panel, 'img', ret='src')[0])
@@ -92,7 +93,8 @@ class navigator:
 
     def getEpisodes(self, url, thumb):
         url_content = client.request('%s%s' %(base_url, url))
-        title = client.replaceHTMLCodes(client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]).encode('utf-8').strip()
+        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
+        title = client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0]).encode('utf-8').strip()
         panel = client.parseDOM(url_content, 'div', attrs={'class': 'panel'})[0]
         poster = client.parseDOM(panel, 'div', attrs={'class': 'poster'})[0]
         banner = '%s/%s' % (poster, client.parseDOM(panel, 'img', ret='src')[0])
@@ -110,7 +112,8 @@ class navigator:
 
     def getMovie(self, url, thumb):
         url_content = client.request('%s%s' %(base_url, url))
-        title = client.replaceHTMLCodes(client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]).encode('utf-8').strip()
+        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
+        title = client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0]).encode('utf-8').strip()
         plot = client.parseDOM(url_content, 'div', attrs={'class': 'leiras'})[0].encode('utf-8').strip().split('<div')[0]
         time = client.parseDOM(url_content, 'div', attrs={'class': 'infotab-time'})[0]
         duration = int(time.replace(" Perc", "").strip())*60

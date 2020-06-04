@@ -1,4 +1,7 @@
-﻿[B]1.0.2[/B]
+﻿[B]1.0.3[/B]
+- Film cím parse-olás javítása
+
+[B]1.0.2[/B]
 - Forrás változás követése
 
 [B]1.0.1[/B]
