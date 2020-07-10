@@ -52,6 +52,7 @@ class navigator:
         self.endDirectory()
 
     def getSearches(self, url, group):
+        url = "" if url == None else url
         self.addDirectoryItem('Új keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         try:
             file = open("%s%s" % (self.searchFileName, url), "r")
@@ -71,6 +72,7 @@ class navigator:
             os.remove("%s%s" % (self.searchFileName, url))
 
     def doSearch(self, url, group):
+        url = "" if url == None else url
         search_text = self.getSearchText()
         if search_text != '':
             if group == "mind":
@@ -79,7 +81,7 @@ class navigator:
                 file = open("%s%s" % (self.searchFileName, url), "a")
                 file.write("%s\n" % search_text)
                 file.close()
-            self.getItems("" if url == None else url, group, search_text)
+            self.getItems(url, group, search_text)
 
     def getItems(self, url, group, search):
         url = "" if url == None else url
