@@ -20,6 +20,7 @@
 
 
 import urlparse,sys, xbmcgui
+from resources.lib.indexers import navigator
 
 params = dict(urlparse.parse_qsl(sys.argv[2].replace('?','')))
 
@@ -38,38 +39,34 @@ banner = params.get('banner')
 plot = params.get('plot')
 
 if action == None:
-    from resources.lib.indexers import navigator
     navigator.navigator().root()
 
 elif action == 'categories':
-    from resources.lib.indexers import navigator
     navigator.navigator().getCategories(url)
 
-
 elif action == 'items':
-    from resources.lib.indexers import navigator
     navigator.navigator().getItems(url, group, search)
 
 elif action == 'movie':
-    from resources.lib.indexers import navigator
     navigator.navigator().getMovie(url, thumb)
 
 elif action == 'playmovie':
-    from resources.lib.indexers import navigator
     navigator.navigator().playmovie(url)
 
 elif action == 'search':
-    from resources.lib.indexers import navigator
     navigator.navigator().doSearch(url, group)
 
 elif action == 'series':
-    from resources.lib.indexers import navigator
     navigator.navigator().getSeries(url, thumb)
 
 elif action == 'episodes':
-    from resources.lib.indexers import navigator
     navigator.navigator().getEpisodes(url, thumb)
 
 elif action == 'episode':
-    from resources.lib.indexers import navigator
     navigator.navigator().getEpisode(url, thumb, banner, plot)
+
+elif action == 'deletesearchhistory':
+    navigator.navigator().deleteSearchHistory(url)
+
+elif action == 'basesearch':
+    navigator.navigator().getSearches(url, group)

@@ -19,7 +19,7 @@
 '''
 
 
-import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon,urllib,urlparse,base64,time
+import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon,urllib,urlparse,base64,time, locale
 import urlresolver
 from resources.lib.modules import client
 
@@ -29,6 +29,11 @@ addonFanart = xbmcaddon.Addon().getAddonInfo('fanart')
 base_url = 'aHR0cHM6Ly9kbWRhbWVkaWEuaHU='.decode('base64')
 
 class navigator:
+    def __init__(self):
+        locale.setlocale(locale.LC_ALL, "")
+        self.base_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+        self.searchFileName = os.path.join(self.base_path, "search.history")
+
     def root(self):
         mainMenu = {'filmek': 'Filmek', '': 'Sorozatok'}
         for menuItem in sorted(mainMenu, reverse=True):
@@ -37,7 +42,7 @@ class navigator:
 
     def getCategories(self, url):
         url = "" if url == None else url
-        self.addDirectoryItem('Keresés', 'search&url=%s&group=mind' % url, '', 'DefaultFolder.png')
+        self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
         catSearch=client.parseDOM(url_content, 'div', attrs={'class': 'categoryfilter'})[0].strip()
         rows=client.parseDOM(catSearch, 'button', attrs={'class': 'category'})
@@ -46,9 +51,34 @@ class navigator:
             self.addDirectoryItem(matches.group(3), 'items&url=%s&group=%s' % (url, matches.group(2)), '', 'DefaultFolder.png')
         self.endDirectory()
 
+    def getSearches(self, url, group):
+        self.addDirectoryItem('Új keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
+        try:
+            file = open("%s%s" % (self.searchFileName, url), "r")
+            items = file.read().splitlines()
+            items.sort(cmp=locale.strcoll)
+            file.close()
+            for item in items:
+                self.addDirectoryItem(item, 'items&url=%s&group=%s&search=%s' % (url, group, urllib.quote_plus(item)), '', 'DefaultFolder.png')
+            if len(items) > 0:
+                self.addDirectoryItem('Keresési előzmények törlése', 'deletesearchhistory&url=%s' % url, '', 'DefaultFolder.png') 
+        except:
+            pass   
+        self.endDirectory()
+
+    def deleteSearchHistory(self, url):
+        if os.path.exists("%s%s" % (self.searchFileName, url)):
+            os.remove("%s%s" % (self.searchFileName, url))
+
     def doSearch(self, url, group):
         search_text = self.getSearchText()
         if search_text != '':
+            if group == "mind":
+                if not os.path.exists(self.base_path):
+                    os.mkdir(self.base_path)
+                file = open("%s%s" % (self.searchFileName, url), "a")
+                file.write("%s\n" % search_text)
+                file.close()
             self.getItems("" if url == None else url, group, search_text)
 
     def getItems(self, url, group, search):
@@ -56,7 +86,10 @@ class navigator:
         if search != None:
             search = search.lower()
         else:
-            self.addDirectoryItem('Keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
+            if group == "mind":
+                self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
+            else:
+                self.addDirectoryItem('Keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
         center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0].encode('utf-8')
         movies = center.replace('</div>', '</div>\n')
