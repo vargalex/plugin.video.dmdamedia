@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.4" provider-name="vargalex">
+<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.5" provider-name="vargalex">
 	<requires>
 		<import addon="xbmc.python" version="2.24.0"/>
 		<import addon="script.module.urlresolver" version="5.0.0"/>
@@ -13,7 +13,7 @@
 		<language>hu</language>
 		<platform>all</platform>
 		<news>
-			- Keresési előzmények tárolása
+			- Locale bugfix
 		</news>
 		<assets>
 		  <icon>icon.png</icon>

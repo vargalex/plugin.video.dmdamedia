@@ -30,7 +30,10 @@ base_url = 'aHR0cHM6Ly9kbWRhbWVkaWEuaHU='.decode('base64')
 
 class navigator:
     def __init__(self):
-        locale.setlocale(locale.LC_ALL, "")
+        try:
+            locale.setlocale(locale.LC_ALL, "")
+        except:
+            pass
         self.base_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
         self.searchFileName = os.path.join(self.base_path, "search.history")
 
