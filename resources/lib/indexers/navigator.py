@@ -161,6 +161,7 @@ class navigator:
         else:
             year = ""
         sources = client.parseDOM(url_content, 'div', attrs={'class': 'megosztok'})[0]
+        sources = sources.replace("<a>", "\n<a>").replace("</a>", "</a>\n")
         sourceCnt = 0
         for source in sources.splitlines():
             matches = re.search(r'^<a(.*)href="(.*)">(.*)</a>$', source.strip())
