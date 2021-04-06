@@ -67,9 +67,14 @@ class navigator:
         self.addDirectoryItem('Új keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         try:
             file = open("%s%s" % (self.searchFileName, url), "r")
-            items = file.read().splitlines()
-            items.sort(cmp=locale.strcoll)
+            olditems = file.read().splitlines()
             file.close()
+            items = list(set(olditems))
+            items.sort(key=locale.strxfrm)
+            if len(items) != len(olditems):
+                file = open("%s%s" % (self.searchFileName, url), "w")
+                file.write("\n".join(items))
+                file.close()
             for item in items:
                 self.addDirectoryItem(item, 'items&url=%s&group=%s&search=%s' % (url, group, quote_plus(item)), '', 'DefaultFolder.png')
             if len(items) > 0:
@@ -79,6 +84,7 @@ class navigator:
         self.endDirectory()
 
     def deleteSearchHistory(self, url):
+        url = "" if url == None else url
         if os.path.exists("%s%s" % (self.searchFileName, url)):
             os.remove("%s%s" % (self.searchFileName, url))
 
