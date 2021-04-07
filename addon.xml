@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.9" provider-name="vargalex">
+<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.10" provider-name="vargalex">
 	<requires>
 		<import addon="script.module.urlresolver" version="5.0.0"/>
 	</requires>
@@ -12,7 +12,7 @@
 		<language>hu</language>
 		<platform>all</platform>
 		<news>
-			- Keresési előzmények javítása
+			- Profile path dekódolás
 		</news>
 		<assets>
 		  <icon>icon.png</icon>

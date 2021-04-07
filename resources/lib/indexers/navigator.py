@@ -22,7 +22,7 @@
 import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon, time, locale
 import urlresolver
 from resources.lib.modules import client
-from resources.lib.modules.utils import py2_encode
+from resources.lib.modules.utils import py2_encode, py2_decode
 
 if sys.version_info[0] == 3:
     import urllib.parse as urlparse
@@ -42,7 +42,7 @@ class navigator:
             locale.setlocale(locale.LC_ALL, "")
         except:
             pass
-        self.base_path = xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile'))
+        self.base_path = py2_decode(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile')))
         self.searchFileName = os.path.join(self.base_path, "search.history")
 
     def root(self):
