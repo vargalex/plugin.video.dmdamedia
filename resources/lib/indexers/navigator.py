@@ -46,7 +46,7 @@ class navigator:
         self.searchFileName = os.path.join(self.base_path, "search.history")
 
     def root(self):
-        mainMenu = {'filmek': 'Filmek', '': 'Sorozatok'}
+        mainMenu = {'film': 'Filmek', '': 'Sorozatok'}
         for menuItem in sorted(mainMenu, reverse=True):
             self.addDirectoryItem(mainMenu[menuItem], 'categories&url=%s' % menuItem, '', 'DefaultFolder.png')
         self.endDirectory()
