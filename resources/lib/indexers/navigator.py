@@ -20,7 +20,7 @@
 
 
 import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon, time, locale
-import urlresolver
+import resolveurl as urlresolver
 from resources.lib.modules import client
 from resources.lib.modules.utils import py2_encode, py2_decode
 

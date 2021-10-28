@@ -1,4 +1,7 @@
-﻿[B]1.0.11[/B]
+﻿[B]1.0.12[/B]
+- Átállás resolveurl-re
+
+[B]1.0.11[/B]
 - Forrás változás követése
 
 [B]1.0.10[/B]
