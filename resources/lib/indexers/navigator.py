@@ -39,9 +39,12 @@ base_url = 'https://dmdamedia.hu'
 class navigator:
     def __init__(self):
         try:
-            locale.setlocale(locale.LC_ALL, "")
+            locale.setlocale(locale.LC_ALL, "hu_HU.UTF-8")
         except:
-            pass
+            try:
+                locale.setlocale(locale.LC_ALL, "")
+            except:
+                pass
         self.base_path = py2_decode(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile')))
         self.searchFileName = os.path.join(self.base_path, "search.history")
 
@@ -163,7 +166,7 @@ class navigator:
         self.endDirectory('episodes')
 
     def getMovie(self, url, thumb):
-        url_content = client.request('%s%s' %(base_url, url))
+        url_content = client.request(url)
         title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0])).strip()
         plot = py2_encode(client.parseDOM(url_content, 'div', attrs={'class': 'leiras'})[0]).strip().split('<div')[0]
@@ -185,7 +188,7 @@ class navigator:
         self.endDirectory('movies')
 
     def playmovie(self, url):
-        url_content = client.request('%s%s' %(base_url, url))
+        url_content = client.request(url)
         filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'filmbeagyazas'})
         if len(filmbeagyazas)>0:
             filmbeagyazas = filmbeagyazas[0]
