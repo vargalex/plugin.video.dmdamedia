@@ -139,7 +139,7 @@ class navigator:
                 if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
                     if getCategoryKeyByValue(cat) not in categories:
                         categories.append(getCategoryKeyByValue(cat))
-                        self.writeDebugLog("getCategories", "categories.append", getCategoyKeyByValue(cat))
+                        self.writeDebugLog("getCategories", "categories.append", getCategoryKeyByValue(cat))
         categories.sort(key=locale.strxfrm)
         for cat in categories:
             self.addDirectoryItem(cat, 'items&url=%s&group=%s' % (url, cat), '', 'DefaultFolder.png')
