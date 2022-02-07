@@ -70,7 +70,7 @@ allCategories = {
 
 def getCategoryKeyByValue(val):
     for key, value in allCategories.items():
-        if val in value:
+        if py2_encode(val) in value:
             return key
     return val
 
@@ -78,12 +78,12 @@ def isInCategory(group, classes):
     if group == "mind":
         return True
     else:
-        if group in allCategories:
+        if py2_encode(group) in allCategories:
             for value in allCategories[group]:
-                if value in classes:
+                if value in py2_encode(classes):
                     return True
         else:
-            if group in classes:
+            if group in py2_encode(classes):
                 return True
     return False
 
@@ -117,8 +117,8 @@ class navigator:
             topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
             for cat in topDivClass.split(' '):
                 if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
-                    if getCategoryKeyByValue(cat) not in categories:
-                        categories.append(getCategoryKeyByValue(cat))
+                    if py2_encode(getCategoryKeyByValue(cat)) not in categories:
+                        categories.append(py2_encode(getCategoryKeyByValue(cat)))
         categories.sort(key=locale.strxfrm)
         for cat in categories:
             self.addDirectoryItem(cat, 'items&url=%s&group=%s' % (url, cat), '', 'DefaultFolder.png')
