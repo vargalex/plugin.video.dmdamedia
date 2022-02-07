@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.14" provider-name="vargalex">
+<addon id="plugin.video.dmdamedia" name="dmdamedia" version="1.0.15~alpha" provider-name="vargalex">
 	<requires>
 		<import addon="script.module.resolveurl" version="5.1.00"/>
 	</requires>
@@ -12,7 +12,7 @@
 		<language>hu</language>
 		<platform>all</platform>
 		<news>
-			- Forrás változás követése
+			- Debug log írása
 		</news>
 		<assets>
 		  <icon>icon.png</icon>

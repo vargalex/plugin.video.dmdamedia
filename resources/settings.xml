@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category> label="Logolás">
+        <setting label="Debug log írás bekapcsolása:" type="bool" id="debuglog" default="false"/>
+        <setting id="deleteDebuglogFile" type="action" label="[B][COLOR red]Debug log törlése[/COLOR][/B]" option="close" action="RunPlugin(plugin://plugin.video.dmdamedia/?action=deletedebuglogfile)"></setting>
+    </category>
+</settings>

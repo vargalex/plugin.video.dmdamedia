@@ -76,3 +76,6 @@ elif action == 'deletesearchhistory':
 
 elif action == 'basesearch':
     navigator.navigator().getSearches(url, group)
+
+elif action == 'deletedebuglogfile':
+    navigator.navigator().deleteDebuglogFile()

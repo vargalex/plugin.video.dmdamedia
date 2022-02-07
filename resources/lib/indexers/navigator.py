@@ -98,6 +98,20 @@ class navigator:
                 pass
         self.base_path = py2_decode(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile')))
         self.searchFileName = os.path.join(self.base_path, "search.history")
+        self.debugFileName = os.path.join(self.base_path, "debug.log")
+        self.debugLog = xbmcaddon.Addon().getSetting('debuglog') == 'true'
+
+    def deleteDebuglogFile(self):
+        if os.path.exists(self.debugFileName):
+            os.remove(self.debugFileName)
+
+    def writeDebugLog(self, funct, variable, msg):
+        if self.debugLog:
+            file = open(self.debugFileName, "a")
+            file.write("----------------------------------------------------------------------------------\n")
+            file.write("%s %s.%s: %s\n" % (time.strftime("%Y.%m.%d %H:%M:%S"), funct, variable, msg))
+            file.write("----------------------------------------------------------------------------------\n")
+            file.close()
 
     def root(self):
         mainMenu = {'film': 'Filmek', '': 'Sorozatok'}
@@ -107,10 +121,13 @@ class navigator:
 
     def getCategories(self, url):
         url = "" if url == None else url
+        self.writeDebugLog("getCategories", "url", url)
         self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         self.addDirectoryItem('Mind', 'items&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
+        self.writeDebugLog("getCategories", "url_content", url_content)
         center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
+        self.writeDebugLog("getCategories", "center", center)
         wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
         categories = []
         for wrap in wraps:
