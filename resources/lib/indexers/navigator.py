@@ -110,7 +110,6 @@ class navigator:
             file = open(self.debugFileName, "a")
             file.write("----------------------------------------------------------------------------------\n")
             file.write("%s %s.%s: %s\n" % (time.strftime("%Y.%m.%d %H:%M:%S"), funct, variable, msg))
-            file.write("----------------------------------------------------------------------------------\n")
             file.close()
 
     def root(self):
@@ -123,7 +122,9 @@ class navigator:
         url = "" if url == None else url
         self.writeDebugLog("getCategories", "url", url)
         self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
+        self.writeDebugLog("getCategories", "addDirectoryItem", "Keresés")
         self.addDirectoryItem('Mind', 'items&url=%s&group=mind' % url, '', 'DefaultFolder.png')
+        self.writeDebugLog("getCategories", "addDirectoryItem", "Mind")
         url_content = client.request('%s/%s' % (base_url, url))
         self.writeDebugLog("getCategories", "url_content", url_content)
         center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
@@ -131,14 +132,18 @@ class navigator:
         wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
         categories = []
         for wrap in wraps:
+            self.writeDebugLog("getCategories", "wrap", wrap)
             topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
             for cat in topDivClass.split(' '):
+                self.writeDebugLog("getCategories", "cat", cat)
                 if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
                     if getCategoryKeyByValue(cat) not in categories:
                         categories.append(getCategoryKeyByValue(cat))
+                        self.writeDebugLog("getCategories", "categories.append", getCategoyKeyByValue(cat))
         categories.sort(key=locale.strxfrm)
         for cat in categories:
             self.addDirectoryItem(cat, 'items&url=%s&group=%s' % (url, cat), '', 'DefaultFolder.png')
+            self.writeDebugLog("getCategories", "finalCategory", cat)
         self.endDirectory()
 
     def getSearches(self, url, group):
