@@ -36,6 +36,57 @@ addonFanart = xbmcaddon.Addon().getAddonInfo('fanart')
 
 base_url = 'https://dmdamedia.hu'
 
+allCategories = {
+    'Akció': ['akcio', 'akció'],
+    'Animációs': ['animacio', 'animacios', 'animácios', 'animációs'],
+    'Bűnügyi': ['bunugyi'],
+    'Csajos': ['csajos'],
+    'Családi': ['csalad', 'csaladi', 'családi'],
+    'Dráma': ['darma', 'drama', 'dráma'],
+    'Dokumentum': ['dokumentum', 'dokumetum'],
+    'Életrajzi': ['eletarjzi', 'eletrajzi'],
+    'Fantasy': ['fanatasy', 'fantasy', 'fatasy'],
+    'Háborús': ['haborus'],
+    'Horror': ['horror'],
+    'Ismeretterjesztő': ['ismeretterjeszto'],
+    'Kaland': ['kaland'],
+    'Krimi': ['krimi'],
+    'Mese': ['mese'],
+    'Minisorozat': ['minisorozat'],
+    'Misztikus': ['mis', 'misztiks', 'misztikus'],
+    'Musical': ['musical'],
+    'Orvosos': ['orvosos'],
+    'Politikai': ['politikai'],
+    'Romantikus': ['romantikus', 'romatikus'],
+    'Sci-fi': ['scifi'],
+    'Sport': ['sport'],
+    'Thriller': ['thriller'],
+    'Történelmi': ['tortenelemi', 'tortenelmi', 'trotenelmi', 'törtenelmi'],
+    'Vígjáték': ['vigajtek', 'vigjatek'],
+    'Western': ['western'],
+    'Zene': ['zene'],
+    'Zsaru': ['zsaru']
+    }
+
+def getCategoryKeyByValue(val):
+    for key, value in allCategories.items():
+        if val in value:
+            return key
+    return val
+
+def isInCategory(group, classes):
+    if group == "mind":
+        return True
+    else:
+        if group in allCategories:
+            for value in allCategories[group]:
+                if value in classes:
+                    return True
+        else:
+            if group in classes:
+                return True
+    return False
+
 class navigator:
     def __init__(self):
         try:
@@ -57,12 +108,20 @@ class navigator:
     def getCategories(self, url):
         url = "" if url == None else url
         self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
+        self.addDirectoryItem('Mind', 'items&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
-        catSearch=client.parseDOM(url_content, 'div', attrs={'class': 'categoryfilter'})[0].strip()
-        rows=client.parseDOM(catSearch, 'button', attrs={'class': 'category'})
-        for row in catSearch.splitlines():
-            matches = re.search(r'^(.*)data-cat="(.*)">(.*)</button>$', row)
-            self.addDirectoryItem(matches.group(3), 'items&url=%s&group=%s' % (url, matches.group(2)), '', 'DefaultFolder.png')
+        center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
+        wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
+        categories = []
+        for wrap in wraps:
+            topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
+            for cat in topDivClass.split(' '):
+                if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
+                    if getCategoryKeyByValue(cat) not in categories:
+                        categories.append(getCategoryKeyByValue(cat))
+        categories.sort(key=locale.strxfrm)
+        for cat in categories:
+            self.addDirectoryItem(cat, 'items&url=%s&group=%s' % (url, cat), '', 'DefaultFolder.png')
         self.endDirectory()
 
     def getSearches(self, url, group):
@@ -114,77 +173,93 @@ class navigator:
                 self.addDirectoryItem('Keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
         center = py2_encode(client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0])
+        start = time.time()
+        wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
+        for wrap in wraps:
+            topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
+            if isInCategory(group, topDivClass):
+                itemUrl = client.parseDOM(wrap, 'a', ret='href')[0]
+                thumb = client.parseDOM(wrap, 'img', ret='data-src')[0]
+                title = client.parseDOM(wrap, 'h1')[0]
+                data_cim = client.parseDOM(wrap, 'div', ret='data-cim')[0].lower()
+                data_cim_en = client.parseDOM(wrap, 'div', ret='data-cim_en')[0].lower()
+                isOK = True
+                if search != None:
+                    lowerTitle = title.lower()
+                    if search not in lowerTitle and search not in data_cim and search not in data_cim_en:
+                        isOK = False
+                if isOK:
+                    self.addDirectoryItem(title, '%s&url=%s&thumb=%s' % ("movie" if url != "" else "series", itemUrl, thumb), "%s/%s" % (base_url, thumb), 'DefaultMovies.png' if url != "" else 'DefaultTVShows.png')
+        """
         movies = center.replace('</div>', '</div>\n')
         for line in movies.splitlines():
-            matches = re.search(r'^<div class="([^"]*)%s([^"]*)"(.*)data-cim="([^"]*)"(.*)href="([^"]*)"(.*)data-src="([^"]*)(.*)$' % (group if group != "mind" else " "), line.strip())
+            matches = re.search(r'^<div class="wrap"><div class="([^"]*)%s([^"]*)"(.*)data-cim="([^"]*)"(.*)href="([^"]*)"(.*)data-src="([^"]*)(.*)$' % (group if group != "mind" else " "), line.strip())
             if matches:
                 isOK = True
                 if search != None:
                     lowerLine = line.lower()
                     if search not in lowerLine:
                         isOK = False
-                if isOK:        
+                if isOK:
+                    cnt+=1
                     self.addDirectoryItem(matches.group(4), '%s&url=%s&thumb=%s' % ("movie" if url != "" else "series", matches.group(6), quote_plus(matches.group(8))), "%s%s" % (base_url, matches.group(8)), 'DefaultMovies.png' if url != "" else 'DefaultTVShows.png')
+        """
         self.endDirectory('movies' if url != "" else 'tvshows')
 
     def getSeries(self, url, thumb):
-        url_content = client.request('%s%s' %(base_url, url))
-        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
-        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0])).strip()
-        panel = client.parseDOM(url_content, 'div', attrs={'class': 'panel'})[0]
-        poster = client.parseDOM(panel, 'div', attrs={'class': 'poster'})[0]
-        banner = '%s/%s' % (poster, client.parseDOM(panel, 'img', ret='src')[0])
-        info = client.parseDOM(panel, 'div', attrs={'class': 'info'})[0]
-        plot = py2_encode(client.parseDOM(info, 'div', attrs={'class': 'leiras'})[0]).strip().split('<div')[0]
-        time = client.parseDOM(info, 'div', attrs={'class': 'infotab-time'})[0]
-        duration = int(time.replace(" Perc", "").strip())*60
-        center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
-        seasons = client.parseDOM(center, 'div', attrs={'class': 'evadok'})[0].replace('</a>', '</a>\n')
+        url_content = client.request("%s%s" % (base_url, url))
+        info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
+        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
+        tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
+        matches = re.search(r'^(.*)<div class="tags">Epizódhossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        if matches:
+            duration = int(matches.group(2).strip())*60
+
+        season = client.parseDOM(url_content, 'div', attrs={'class': 'season'})[0]
+        seasons = season.replace('</a>', '</a>\n')
         for season in seasons.splitlines():
-            matches = re.search(r'^<a(.*)class="linktab"(.*)href="(.*)">(.*)</a>$', season.strip())
+            matches = re.search(r'^<a(.*)class="evad"(.*)href="(.*)">(.*)</a>$', season.strip())
             if matches:
-                self.addDirectoryItem(u'%s. évad' % matches.group(4), 'episodes&url=%s&thumb=%s' % (quote_plus(matches.group(3)), quote_plus(thumb)), "%s%s" % (base_url, thumb), 'DefaultMovies.png', meta={'title': title, 'plot': plot, 'duration': duration}, banner=banner)
+                self.addDirectoryItem(u'%s. évad' % matches.group(4), 'episodes&url=%s&thumb=%s' % (quote_plus(matches.group(3)), quote_plus(thumb)), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', meta={'title': title, 'plot': plot, 'duration': duration})
         self.endDirectory('tvshows')
 
     def getEpisodes(self, url, thumb):
-        url_content = client.request('%s%s' %(base_url, url))
-        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
-        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0])).strip()
-        panel = client.parseDOM(url_content, 'div', attrs={'class': 'panel'})[0]
-        poster = client.parseDOM(panel, 'div', attrs={'class': 'poster'})[0]
-        banner = '%s/%s' % (poster, client.parseDOM(panel, 'img', ret='src')[0])
-        info = client.parseDOM(panel, 'div', attrs={'class': 'info'})[0]
-        plot = py2_encode(client.parseDOM(info, 'div', attrs={'class': 'leiras'})[0]).strip().split('<div')[0]
-        time = client.parseDOM(info, 'div', attrs={'class': 'infotab-time'})[0]
-        duration = int(time.replace(" Perc", "").strip())*60
-        center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
-        episodes = client.parseDOM(center, 'div', attrs={'class': 'reszek'})[0].replace('</a>', '</a>\n')
+        url_content = client.request("%s%s" % (base_url, url))
+        info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
+        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
+        tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
+        matches = re.search(r'^(.*)<div class="tags">Epizódhossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        if matches:
+            duration = int(matches.group(2).strip())*60
+
+        controls = client.parseDOM(url_content, 'div', attrs={'class': 'controls'})[0]
+        episodes = client.parseDOM(controls, 'div', attrs={'class': 'reszek'})[0].replace('</a>', '</a>\n')
         for episode in episodes.splitlines():
-            matches = re.search(r'(.*)<a(.*)class="linktab([^"]*)"(.*)href="(.*)">(.*)</a>$', episode.strip())
+            matches = re.search(r'(.*)<a(.*)class="(.*)episode"(.*)href="(.*)">(.*)</a>$', episode.strip())
             if matches:
-                self.addDirectoryItem(u'%s. rész %s' % (matches.group(6), "| [COLOR limegreen]Feliratos[/COLOR]" if matches.group(3) == "_feliratos" else ""), 'movie&url=%s&thumb=%s&banner=%s&plot=%s' % (quote_plus(matches.group(5)), quote_plus(thumb), quote_plus(banner), quote_plus(plot)), "%s%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=True, meta={'title': title, 'plot': plot, 'duration': duration}, banner=banner)
+                self.addDirectoryItem(u'%s. rész %s' % (matches.group(6), "| [COLOR limegreen]Feliratos[/COLOR]" if "sub " in matches.group(3) else ""), 'movie&url=%s&thumb=%s&plot=%s' % (quote_plus(matches.group(5)), quote_plus(thumb), quote_plus(plot)), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=True, meta={'title': title, 'plot': plot, 'duration': duration})
         self.endDirectory('episodes')
 
     def getMovie(self, url, thumb):
         url_content = client.request(url)
-        title = client.parseDOM(url_content, 'div', attrs={'class': 'cim'})[0]
-        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(title, 'h1')[0])).strip()
-        plot = py2_encode(client.parseDOM(url_content, 'div', attrs={'class': 'leiras'})[0]).strip().split('<div')[0]
-        time = client.parseDOM(url_content, 'div', attrs={'class': 'infotab-time'})[0]
-        duration = int(time.replace(" Perc", "").strip())*60
-        year = client.parseDOM(url_content, 'div', attrs={'class': 'infotab-time'})
-        if len(year)>1:
-            year = year[1]
-        else:
-            year = ""
-        sources = client.parseDOM(url_content, 'div', attrs={'class': 'megosztok'})[0]
-        sources = sources.replace("<a>", "\n<a>").replace("</a>", "</a>\n")
+        info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
+        title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
+        tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
+        matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        if matches:
+            duration = int(matches.group(3).strip())*60
+        servers = client.parseDOM(url_content, 'div', attrs={'class': 'servers'})[0]
+        lista = client.parseDOM(servers, 'div', attrs={'class': 'lista'})[0]
+        sources = lista.replace("<a>", "\n<a>").replace("</a>", "</a>\n")
         sourceCnt = 0
         for source in sources.splitlines():
             matches = re.search(r'^<a(.*)href="(.*)">(.*)</a>$', source.strip())
             if matches:
                 sourceCnt+=1
-                self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), matches.group(3)), 'playmovie&url=%s%s' % (url, quote_plus(matches.group(2))), "%s%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
+                self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), matches.group(3)), 'playmovie&url=%s%s' % (url, quote_plus(matches.group(2))), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
         self.endDirectory('movies')
 
     def playmovie(self, url):
