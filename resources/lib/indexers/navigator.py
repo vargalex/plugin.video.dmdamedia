@@ -21,7 +21,7 @@
 
 import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon, time, locale
 import resolveurl as urlresolver
-from resources.lib.modules import client
+from resources.lib.modules import client, control
 from resources.lib.modules.utils import py2_encode, py2_decode
 
 if sys.version_info[0] == 3:
@@ -96,7 +96,7 @@ class navigator:
                 locale.setlocale(locale.LC_ALL, "")
             except:
                 pass
-        self.base_path = py2_decode(xbmc.translatePath(xbmcaddon.Addon().getAddonInfo('profile')))
+        self.base_path = control.dataPath
         self.searchFileName = os.path.join(self.base_path, "search.history")
 
     def root(self):
@@ -165,7 +165,7 @@ class navigator:
     def getItems(self, url, group, search):
         url = "" if url == None else url
         if search != None:
-            search = search.lower()
+            search = py2_encode(search.lower())
         else:
             if group == "mind":
                 self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
@@ -180,9 +180,9 @@ class navigator:
             if isInCategory(group, topDivClass):
                 itemUrl = client.parseDOM(wrap, 'a', ret='href')[0]
                 thumb = client.parseDOM(wrap, 'img', ret='data-src')[0]
-                title = client.parseDOM(wrap, 'h1')[0]
-                data_cim = client.parseDOM(wrap, 'div', ret='data-cim')[0].lower()
-                data_cim_en = client.parseDOM(wrap, 'div', ret='data-cim_en')[0].lower()
+                title = py2_encode(client.parseDOM(wrap, 'h1')[0])
+                data_cim = py2_encode(client.parseDOM(wrap, 'div', ret='data-cim')[0]).lower()
+                data_cim_en = py2_encode(client.parseDOM(wrap, 'div', ret='data-cim_en')[0]).lower()
                 isOK = True
                 if search != None:
                     lowerTitle = title.lower()
@@ -212,9 +212,9 @@ class navigator:
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
-        matches = re.search(r'^(.*)<div class="tags">Epizódhossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
         if matches:
-            duration = int(matches.group(2).strip())*60
+            duration = int(matches.group(3).strip())*60
 
         season = client.parseDOM(url_content, 'div', attrs={'class': 'season'})[0]
         seasons = season.replace('</a>', '</a>\n')
@@ -230,9 +230,9 @@ class navigator:
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
-        matches = re.search(r'^(.*)<div class="tags">Epizódhossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
         if matches:
-            duration = int(matches.group(2).strip())*60
+            duration = int(matches.group(3).strip())*60
 
         controls = client.parseDOM(url_content, 'div', attrs={'class': 'controls'})[0]
         episodes = client.parseDOM(controls, 'div', attrs={'class': 'reszek'})[0].replace('</a>', '</a>\n')
