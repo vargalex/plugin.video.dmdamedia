@@ -110,12 +110,10 @@ class navigator:
         self.addDirectoryItem('Keresés', 'basesearch&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         self.addDirectoryItem('Mind', 'items&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
-        center = client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0]
-        wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
         categories = []
-        for wrap in wraps:
-            topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
-            for cat in topDivClass.split(' '):
+        allItems = re.findall(r'<div class="wrap"><div class="[^"]*', url_content)
+        for item in allItems:
+            for cat in item.replace('<div class="wrap"><div class="', '').replace(',', '').split(' '):
                 if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
                     if py2_encode(getCategoryKeyByValue(cat)) not in categories:
                         categories.append(py2_encode(getCategoryKeyByValue(cat)))
@@ -172,38 +170,23 @@ class navigator:
             else:
                 self.addDirectoryItem('Keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
-        center = py2_encode(client.parseDOM(url_content, 'div', attrs={'class': 'center'})[0])
-        start = time.time()
-        wraps = client.parseDOM(center, 'div', attrs={'class': 'wrap'})
-        for wrap in wraps:
-            topDivClass = client.parseDOM(wrap, 'div', ret='class')[0].replace(',', '')
-            if isInCategory(group, topDivClass):
-                itemUrl = client.parseDOM(wrap, 'a', ret='href')[0]
-                thumb = client.parseDOM(wrap, 'img', ret='data-src')[0]
-                title = py2_encode(client.parseDOM(wrap, 'h1')[0])
-                data_cim = py2_encode(client.parseDOM(wrap, 'div', ret='data-cim')[0]).lower()
-                data_cim_en = py2_encode(client.parseDOM(wrap, 'div', ret='data-cim_en')[0]).lower()
-                isOK = True
-                if search != None:
-                    lowerTitle = title.lower()
-                    if search not in lowerTitle and search not in data_cim and search not in data_cim_en:
-                        isOK = False
-                if isOK:
-                    self.addDirectoryItem(title, '%s&url=%s&thumb=%s' % ("movie" if url != "" else "series", itemUrl, thumb), "%s/%s" % (base_url, thumb), 'DefaultMovies.png' if url != "" else 'DefaultTVShows.png')
-        """
-        movies = center.replace('</div>', '</div>\n')
-        for line in movies.splitlines():
-            matches = re.search(r'^<div class="wrap"><div class="([^"]*)%s([^"]*)"(.*)data-cim="([^"]*)"(.*)href="([^"]*)"(.*)data-src="([^"]*)(.*)$' % (group if group != "mind" else " "), line.strip())
+        items = re.findall(r'<div class="wrap"><div class="[^"]*".*?</div>', url_content)
+        for item in items:
+            matches = re.search(r'^<div class="wrap"><div class="([^"]*)"(.*)data-cim="([^"]*)"(.*)data-cim_en="([^"]*)"(.*)<h1>(.*)</h1>(.*)<a href="([^"]*)"(.*)<img(.*)data-src="([^"]*)(.*)', item)
             if matches:
-                isOK = True
-                if search != None:
-                    lowerLine = line.lower()
-                    if search not in lowerLine:
-                        isOK = False
-                if isOK:
-                    cnt+=1
-                    self.addDirectoryItem(matches.group(4), '%s&url=%s&thumb=%s' % ("movie" if url != "" else "series", matches.group(6), quote_plus(matches.group(8))), "%s%s" % (base_url, matches.group(8)), 'DefaultMovies.png' if url != "" else 'DefaultTVShows.png')
-        """
+                if isInCategory(group, matches.group(1).replace(',', '')):
+                    itemUrl = matches.group(9)
+                    thumb = matches.group(12)
+                    title = py2_encode(matches.group(7))
+                    data_cim = py2_encode(matches.group(3)).lower()
+                    data_cim_en = py2_encode(matches.group(5)).lower()
+                    isOK = True
+                    if search != None:
+                        lowerTitle = title.lower()
+                        if search not in lowerTitle and search not in data_cim and search not in data_cim_en:
+                            isOK = False
+                    if isOK:
+                        self.addDirectoryItem(title, '%s&url=%s&thumb=%s' % ("movie" if url != "" else "series", itemUrl, thumb), "%s/%s" % (base_url, thumb), 'DefaultMovies.png' if url != "" else 'DefaultTVShows.png')
         self.endDirectory('movies' if url != "" else 'tvshows')
 
     def getSeries(self, url, thumb):

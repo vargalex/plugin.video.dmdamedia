@@ -1,4 +1,7 @@
-﻿[B]1.0.16[/B]
+﻿[B]1.0.17[/B]
+- Parse-olás optimalizálás
+
+[B]1.0.16[/B]
 - Leia bugfix + Nexus kompatibilitás
 
 [B]1.0.15[/B]
