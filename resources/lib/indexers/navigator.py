@@ -111,9 +111,9 @@ class navigator:
         self.addDirectoryItem('Mind', 'items&url=%s&group=mind' % url, '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
         categories = []
-        allItems = re.findall(r'<div class="wrap"><div class="[^"]*', url_content)
+        allItems = re.findall(r'<div class="topseries[^"]*', url_content)
         for item in allItems:
-            for cat in item.replace('<div class="wrap"><div class="', '').replace(',', '').split(' '):
+            for cat in item.replace('<div class="topseries', '').replace(',', '').split(' '):
                 if cat != 'topseries' and cat != 'vege' and len(cat.replace(' ', ''))>0:
                     if py2_encode(getCategoryKeyByValue(cat)) not in categories:
                         categories.append(py2_encode(getCategoryKeyByValue(cat)))
@@ -170,9 +170,9 @@ class navigator:
             else:
                 self.addDirectoryItem('Keresés', 'search&url=%s&group=%s' % (url, group), '', 'DefaultFolder.png')
         url_content = client.request('%s/%s' % (base_url, url))
-        items = re.findall(r'<div class="wrap"><div class="[^"]*".*?</div>', url_content)
+        items = re.findall(r'<div class="topseries[^"]*".*?</div>', url_content)
         for item in items:
-            matches = re.search(r'^<div class="wrap"><div class="([^"]*)"(.*)data-cim="([^"]*)"(.*)data-cim_en="([^"]*)"(.*)<h1>(.*)</h1>(.*)<a href="([^"]*)"(.*)<img(.*)data-src="([^"]*)(.*)', item)
+            matches = re.search(r'^<div class="topseries([^"]*)"(.*)data-cim="([^"]*)"(.*)data-cim_en="([^"]*)"(.*)<h1>(.*)</h1>(.*)<a href="([^"]*)"(.*)<img(.*)data-src="([^"]*)(.*)', item)
             if matches:
                 if isInCategory(group, matches.group(1).replace(',', '')):
                     itemUrl = matches.group(9)
