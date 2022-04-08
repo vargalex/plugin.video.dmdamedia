@@ -231,9 +231,14 @@ class navigator:
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
-        matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+        matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>(.*)<span(.*)>(.*)\(([0-9]*)"(.*)', tab, re.S)
+        duration = None
         if matches:
-            duration = int(matches.group(3).strip())*60
+            duration = int(matches.group(6).strip())*60
+        else:
+            matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>([0-9]*) Perc(.*)$', tab, re.S)
+            if matches:
+                duration = int(matches.group(3).strip())*60
         servers = client.parseDOM(url_content, 'div', attrs={'class': 'servers'})[0]
         lista = client.parseDOM(servers, 'div', attrs={'class': 'lista'})[0]
         sources = lista.replace("<a>", "\n<a>").replace("</a>", "</a>\n")

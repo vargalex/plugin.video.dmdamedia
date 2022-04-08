@@ -108,7 +108,7 @@ def request(url, close=True, error=False, proxy=None, post=None, headers=None, m
             response.close()
 
         if (sys.version_info[0] == 3 and not isinstance(result, str)):
-            return result.decode('utf-8')
+            return result.decode('utf-8', 'ignore')
         else:
             return result
     except:
