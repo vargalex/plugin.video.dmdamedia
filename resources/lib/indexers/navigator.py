@@ -103,7 +103,7 @@ class navigator:
             if filterparam and filterparam != "mind":
                 matched = len(client.parseDOM(sorozat, "div", attrs={'class': filterparam})) > 0
             if matched:
-                self.addDirectoryItem("%s%s" % (title, extraInfo if filterparam == "mind" or not filterparam else ""), '%s&url=%s&thumb=%s' % ("series" if extraInfo != "" or "sorozatok" in url else "movie", link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if extraInfo != "" or "sorozatok" in url else 'DefaultMovies.png')
+                self.addDirectoryItem("%s%s" % (title, extraInfo if not filterparam or filterparam == "mind" else ""), '%s&url=%s&thumb=%s' % ("series" if extraInfo != "" or "sorozatok" in url else "movie", link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if extraInfo != "" or "sorozatok" in url else 'DefaultMovies.png')
 
     def doSearch(self):
         search_text = self.getSearchText()
@@ -150,7 +150,7 @@ class navigator:
                 nextPage = re.search(r'.*oldal=([0-9]+).*', hrefs[-1][1])[1]
                 allPage = hrefs[-2][2]
                 self.addDirectoryItem("[COLOR green]Következő oldal (%s/%s)[/COLOR]" % (nextPage, allPage), 'items&url=%s&order=%s' % (url, hrefs[-1][1]), '', 'DefaultFolder.png')
-        self.endDirectory("movies" if "filmek" in url or "film" in filterparam else "tvshows" if "sorozatok" in url or "sorozat" in filterparam else "")
+        self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
 
     def getSeries(self, url, thumb):
         url_content = client.request("%s%s" % (base_url, url))
