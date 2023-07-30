@@ -116,7 +116,7 @@ class navigator:
             self.getSearchedItems(search_text)
 
     def getSearchedItems(self, search_text):
-        content = client.request("%s/%s" % (base_url, "search"), post=("search=%s" % search_text).encode("utf-8"))
+        content = client.request("%s/%s" % (base_url, "search"), post=("search=%s" % py2_decode(search_text)).encode("utf-8"))
         center = client.parseDOM(content, "div", attrs={'class': 'center'})[0]
         self.renderItems(base_url, center, None)
         self.endDirectory()
@@ -143,13 +143,13 @@ class navigator:
                 self.endDirectory()
                 return
         self.renderItems(url, center, filterparam)
-        lapozo = client.parseDOM(center, "div", attrs={'class': 'lapozo'})
+        lapozo = client.parseDOM(content, "div", attrs={'class': 'lapozo'})
         if len(lapozo) > 0:
             hrefs = re.findall(r'<a class="([^"]+)" href="([^"]+)">([^<]+)</a>', lapozo[0])
             if hrefs[-1][0] == "oldal":
-                nextPage = re.search(r'.*oldal=([0-9]+).*', hrefs[-1][1])[1]
+                nextPage = re.search(r'.*oldal=([0-9]+).*', hrefs[-1][1]).group(1)
                 allPage = hrefs[-2][2]
-                self.addDirectoryItem("[COLOR green]Következő oldal (%s/%s)[/COLOR]" % (nextPage, allPage), 'items&url=%s&order=%s' % (url, hrefs[-1][1]), '', 'DefaultFolder.png')
+                self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (url, hrefs[-1][1]), '', 'DefaultFolder.png')
         self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
 
     def getSeries(self, url, thumb):
