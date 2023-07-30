@@ -44,14 +44,20 @@ banner = params.get('banner')
 
 plot = params.get('plot')
 
+order = params.get('order')
+
+filterparam = params.get('filterparam')
+
+category = params.get('category')
+
 if action == None:
     navigator.navigator().root()
 
 elif action == 'categories':
-    navigator.navigator().getCategories(url)
+    navigator.navigator().getCategories()
 
 elif action == 'items':
-    navigator.navigator().getItems(url, group, search)
+    navigator.navigator().getItems(url, category, order, filterparam)
 
 elif action == 'movie':
     navigator.navigator().getMovie(url, thumb)
@@ -60,7 +66,7 @@ elif action == 'playmovie':
     navigator.navigator().playmovie(url)
 
 elif action == 'search':
-    navigator.navigator().doSearch(url, group)
+    navigator.navigator().doSearch()
 
 elif action == 'series':
     navigator.navigator().getSeries(url, thumb)
@@ -75,4 +81,7 @@ elif action == 'deletesearchhistory':
     navigator.navigator().deleteSearchHistory(url)
 
 elif action == 'basesearch':
-    navigator.navigator().getSearches(url, group)
+    navigator.navigator().getSearches()
+
+elif action == 'searchfortext':
+    navigator.navigator().getSearchedItems(search)

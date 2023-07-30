@@ -1,4 +1,8 @@
-﻿[B]1.0.19[/B]
+﻿[B]1.0.20[/B]
+- Forrás változás követése
+- Refactor
+
+[B]1.0.19[/B]
 - Forrás változás követése
 
 [B]1.0.18[/B]
