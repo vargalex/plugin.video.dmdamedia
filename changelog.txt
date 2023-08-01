@@ -1,4 +1,7 @@
-﻿[B]1.0.20[/B]
+﻿[B]1.0.21[/B]
+- Streanwish linkekhez referer hozzáadása
+
+[B]1.0.20[/B]
 - Forrás változás követése
 - Refactor
 
