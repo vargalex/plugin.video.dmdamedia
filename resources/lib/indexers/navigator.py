@@ -203,7 +203,7 @@ class navigator:
             if matches:
                 duration = int(matches.group(3).strip())*60
         beagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'beagyazas'})[0]
-        sources = re.findall(r'<a class="([^"]+)" title="([^"]+)"(.*)href="([^"]+)">([^<]+)</a>', beagyazas)
+        sources = re.findall(r'<a class="([^"]+)" title="([^"]+)"(.*?)href="([^"]+)">([^<]+)</a>', beagyazas)
         sourceCnt = 0
         for source in sources:
             sourceCnt+=1
