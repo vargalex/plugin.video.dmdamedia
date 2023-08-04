@@ -218,7 +218,7 @@ class navigator:
         else:
             filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'beagyazas'})[0]
         source = client.parseDOM(filmbeagyazas, 'iframe', ret='src')[0]
-        if "streamwish" in source:
+        if any(x in source for x in ["streamwish", "filemoon"]):
             source = "%s$$%s" % (source, base_url)
         xbmc.log('Dmdamedia: resolving url: %s' % source, xbmc.LOGINFO)
         try:

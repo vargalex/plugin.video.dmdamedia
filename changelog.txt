@@ -1,4 +1,7 @@
-﻿[B]1.0.22[/B]
+﻿[B]1.0.23[/B]
+- Filemoon linkek referer hozzáadása
+
+[B]1.0.22[/B]
 - Több forrás kezelésének javítása
 
 [B]1.0.21[/B]
