@@ -93,7 +93,9 @@ class navigator:
     def renderItems(self, url, center, filterparam):
         sorozatok = client.parseDOM(center, "div", attrs={'class': 'sorozatok'})
         for sorozat in sorozatok:
-            title = py2_encode(client.parseDOM(sorozat, "h1")[0])
+            title = py2_encode(client.parseDOM(sorozat, "h1")[0]).strip()
+            if "<a" in title:
+                title = title[:title.find("<a")].strip()
             link = client.parseDOM(sorozat, "a", ret="href")[0]
             link = "/%s" % link if not link.startswith("/") else link
             thumb = client.parseDOM(sorozat, "img", attrs={'class': 'posterload'}, ret="data-src")[0]
@@ -156,6 +158,8 @@ class navigator:
         url_content = client.request("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        if "<a" in title:
+            title = title[:title.find("<a")].strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
         matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div>(.*)<p>([0-9]*) Perc(.*)$', tab, re.S | re.IGNORECASE)
@@ -174,6 +178,10 @@ class navigator:
         url_content = client.request("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        if "<a" in title:
+            title = title[:title.find("<a")].strip()
+        if "</a" in title:
+            title = title[:title.find("</a")].strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
         matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div>(.*)<p>([0-9]*) Perc(.*)$', tab, re.S | re.IGNORECASE)
@@ -192,6 +200,10 @@ class navigator:
         url_content = client.request("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
+        if "<a" in title:
+            title = title[:title.find("<a")].strip()
+        if "</a" in title:
+            title = title[:title.find("</a")].strip()
         plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
         matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>(.*)<span(.*)>(.*)\(([0-9]*)"(.*)', tab, re.S)
@@ -231,6 +243,15 @@ class navigator:
         if direct_url:
             xbmc.log('Dmdamedia: playing URL: %s' % direct_url, xbmc.LOGINFO)
             play_item = xbmcgui.ListItem(path=direct_url)
+            if 'm3u8' in direct_url:
+                from inputstreamhelper import Helper
+                is_helper = Helper('hls')
+                if is_helper.check_inputstream():
+                    if sys.version_info < (3, 0):  # if python version < 3 is safe to assume we are running on Kodi 18
+                        play_item.setProperty('inputstreamaddon', 'inputstream.adaptive')   # compatible with Kodi 18 API
+                    else:
+                        play_item.setProperty('inputstream', 'inputstream.adaptive')  # compatible with recent builds Kodi 19 API
+                    play_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
             xbmcplugin.setResolvedUrl(syshandle, True, listitem=play_item)
 
     def addDirectoryItem(self, name, query, thumb, icon, context=None, queue=False, isAction=True, isFolder=True, Fanart=None, meta=None, banner=None):

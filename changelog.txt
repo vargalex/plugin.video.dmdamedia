@@ -1,4 +1,7 @@
-﻿[B]1.0.23[/B]
+﻿[B]1.0.24[/B]
+- m3u8 esetén Inputstream adaptive használata
+
+[B]1.0.23[/B]
 - Filemoon linkek referer hozzáadása
 
 [B]1.0.22[/B]
