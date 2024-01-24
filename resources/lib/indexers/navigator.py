@@ -349,9 +349,6 @@ class navigator:
             loginCookie = client.request(login_url, post='felhasznalonev=%s&jelszo=%s&submit=' % (self.username, self.password), output="cookie")
             if loginCookie:
                 url_content = client.request(favorites_url, cookie=loginCookie)
-                file = open("/home/gavarga/dmdamedia.txt", "w")
-                file.write(url_content)
-                file.close()
                 if url_content and 'Kijelentkez' in url_content:
                     self.loggedin = True
                     self.loginCookie = loginCookie

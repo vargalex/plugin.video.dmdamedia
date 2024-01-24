@@ -1,4 +1,7 @@
-﻿[B]1.0.25[/B]
+﻿[B]1.0.26[/B]
+- BugFix
+
+[B]1.0.25[/B]
 - Forrás változás követése
 
 [B]1.0.24[/B]
