@@ -20,7 +20,7 @@
 
 
 import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon, time, locale
-import resolveurl as urlresolver
+import resolveurl
 from resources.lib.modules import client, control
 from resources.lib.modules.utils import py2_encode, py2_decode
 
@@ -34,7 +34,9 @@ else:
 sysaddon = sys.argv[0] ; syshandle = int(sys.argv[1])
 addonFanart = xbmcaddon.Addon().getAddonInfo('fanart')
 
-base_url = 'https://dmdamedia.hu'
+base_url = 'https://dmda.media'
+login_url = '%s/login' % base_url
+favorites_url = '%s/kedvencek' % base_url
 
 class navigator:
     def __init__(self):
@@ -45,19 +47,35 @@ class navigator:
                 locale.setlocale(locale.LC_ALL, "")
             except:
                 pass
-        self.base_path = control.dataPath
+        self.base_path = py2_decode(control.dataPath)
         self.searchFileName = os.path.join(self.base_path, "search.history")
+        self.loggedin = False
+        if (control.setting('username') and control.setting('password')):
+            self.loggedin = control.setting('loggedin').lower() == "true"
+            self.loginCookie = control.setting('logincookie')
+        else:
+            if xbmcgui.Dialog().ok('Dmdamedia', 'A kiegészítő használatához add meg a bejelentkezési adataidat!'):
+                xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
+                control.addon(control.addonInfo('id')).openSettings()
+        self.username = control.setting('username').strip()
+        self.password = control.setting('password').strip()
+        self.login()
+        try:
+            self.downloadsubtitles = xbmcaddon.Addon().getSettingBool('downloadsubtitles')
+        except:
+            self.downloadsubtitles = xbmcaddon.Addon().getSetting('downloadsubtitles').lower() == 'true'
 
     def root(self):
         self.addDirectoryItem('Mind', 'items&url=%s%s' % (base_url, ''), '', 'DefaultFolder.png')
         self.addDirectoryItem('Filmek', 'items&url=%s%s' % (base_url, '/filmek'), '', 'DefaultFolder.png')
         self.addDirectoryItem('Sorozatok', 'items&url=%s%s' % (base_url, '/sorozatok'), '', 'DefaultFolder.png')
         self.addDirectoryItem('Kategóriák', 'categories', '', 'DefaultFolder.png')
+        self.addDirectoryItem('Kedvencek', 'items&url=%s?' % favorites_url, '', 'DefaultFolder.png')
         self.addDirectoryItem('Keresés', 'basesearch', '', 'DefaultFolder.png')
         self.endDirectory()
 
     def getCategories(self):
-        content = client.request(base_url)
+        content = self.requestWithCookie(base_url)
         catList = client.parseDOM(content, "div", attrs={'id': 'catlist'})[0]
         categories = re.findall(r'<a href="([^"]+)">([^<]+)</a>', catList)
         for category in categories:
@@ -118,13 +136,13 @@ class navigator:
             self.getSearchedItems(search_text)
 
     def getSearchedItems(self, search_text):
-        content = client.request("%s/%s" % (base_url, "search"), post=("search=%s" % py2_decode(search_text)).encode("utf-8"))
+        content = self.requestWithCookie("%s/%s" % (base_url, "search"), post=("search=%s" % py2_decode(search_text)))
         center = client.parseDOM(content, "div", attrs={'class': 'center'})[0]
         self.renderItems(base_url, center, None)
         self.endDirectory()
 
     def getItems(self, url, category, order, filterparam):
-        content = client.request("%s%s%s" % (url, "=%s" % quote_plus(category) if category else "", order or ""))
+        content = self.requestWithCookie("%s%s%s" % (url, "=%s" % quote_plus(category) if category else "", order or ""))
         if order == None:
             listCont = client.parseDOM(content, "div", attrs={'class': 'list-cont'})
             if len(listCont) > 0:
@@ -151,11 +169,11 @@ class navigator:
             if hrefs[-1][0] == "oldal":
                 nextPage = re.search(r'.*oldal=([0-9]+).*', hrefs[-1][1]).group(1)
                 allPage = hrefs[-2][2]
-                self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (url, hrefs[-1][1]), '', 'DefaultFolder.png')
+                self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (url, quote_plus(hrefs[-1][1])), '', 'DefaultFolder.png')
         self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
 
     def getSeries(self, url, thumb):
-        url_content = client.request("%s%s" % (base_url, url))
+        url_content = self.requestWithCookie("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -175,7 +193,7 @@ class navigator:
         self.endDirectory('tvshows')
 
     def getEpisodes(self, url, thumb):
-        url_content = client.request("%s%s" % (base_url, url))
+        url_content = self.requestWithCookie("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -197,7 +215,7 @@ class navigator:
         self.endDirectory('episodes')
 
     def getMovie(self, url, thumb):
-        url_content = client.request("%s%s" % (base_url, url))
+        url_content = self.requestWithCookie("%s%s" % (base_url, url))
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -223,25 +241,26 @@ class navigator:
         self.endDirectory('movies')
 
     def playmovie(self, url):
-        url_content = client.request("%s%s" % (base_url, url))
+        url_content = self.requestWithCookie("%s%s" % (base_url, url))
         filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'filmbeagyazas'})
         if len(filmbeagyazas)>0:
             filmbeagyazas = filmbeagyazas[0]
         else:
             filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'beagyazas'})[0]
         source = client.parseDOM(filmbeagyazas, 'iframe', ret='src')[0]
-        if any(x in source for x in ["streamwish", "filemoon"]):
+        if any(x in source for x in ["streamwish", "filemoon", "embedwish"]):
             source = "%s$$%s" % (source, base_url)
-        xbmc.log('Dmdamedia: resolving url: %s' % source, xbmc.LOGINFO)
-        try:
-            direct_url = urlresolver.resolve(source)
-            if direct_url:
-                direct_url = py2_encode(direct_url)
-        except Exception as e:
-            xbmcgui.Dialog().notification(urlparse.urlparse(url).hostname, str(e))
-            return
-        if direct_url:
-            xbmc.log('Dmdamedia: playing URL: %s' % direct_url, xbmc.LOGINFO)
+        xbmc.log('Dmdamedia: resolving url %s with ResolveURL' % source, xbmc.LOGINFO)
+        direct_url = None
+        hmf = resolveurl.HostedMediaFile(source, subs=self.downloadsubtitles)
+        subtitles = None
+        if hmf:
+            resp = hmf.resolve()
+            direct_url = resp.get('url')
+            xbmc.log('Dmdamedia: ResolveURL resolved URL: %s' % direct_url, xbmc.LOGINFO)
+            direct_url = py2_encode(direct_url)
+            if self.downloadsubtitles:
+                subtitles = resp.get('subs')
             play_item = xbmcgui.ListItem(path=direct_url)
             if 'm3u8' in direct_url:
                 from inputstreamhelper import Helper
@@ -251,8 +270,48 @@ class navigator:
                         play_item.setProperty('inputstreamaddon', 'inputstream.adaptive')   # compatible with Kodi 18 API
                     else:
                         play_item.setProperty('inputstream', 'inputstream.adaptive')  # compatible with recent builds Kodi 19 API
+                    try:
+                        play_item.setProperty('inputstream.adaptive.stream_headers', direct_url.split("|")[1])
+                        play_item.setProperty('inputstream.adaptive.manifest_headers', direct_url.split("|")[1])
+                    except:
+                        pass
                     play_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
+            if self.downloadsubtitles:
+                if subtitles:
+                    errMsg = ""
+                    try:
+                        if not os.path.exists("%s/subtitles" % self.base_path):
+                            errMsg = "Hiba a felirat könyvtár létrehozásakor!"
+                            os.mkdir("%s/subtitles" % self.base_path)
+                        for f in os.listdir("%s/subtitles" % self.base_path):
+                            errMsg = "Hiba a korábbi feliratok törlésekor!"
+                            os.remove("%s/subtitles/%s" % (self.base_path, f))
+                        finalsubtitles=[]
+                        errMsg = "Hiba a sorozat felirat letöltésekor!"
+                        for sub in subtitles:
+                            subtitle = client.request(subtitles[sub])
+                            if len(subtitle) > 0:
+                                errMsg = "Hiba a sorozat felirat file kiírásakor!"
+                                file = safeopen(os.path.join(self.base_path, "subtitles", "%s.srt" % sub.strip()), "w")
+                                file.write(subtitle)
+                                file.close()
+                                errMsg = "Hiba a sorozat felirat file hozzáadásakor!"
+                                finalsubtitles.append(os.path.join(self.base_path, "subtitles", "%s.srt" % sub.strip()))
+                            else:
+                                xbmc.log("Dmdamedia: Subtitles not found in source", xbmc.LOGINFO)
+                        if len(finalsubtitles)>0:
+                            errMsg = "Hiba a feliratok beállításakor!"
+                            play_item.setSubtitles(finalsubtitles)
+                    except:
+                        xbmcgui.Dialog().notification("Dmdamedia hiba", errMsg, xbmcgui.NOTIFICATION_ERROR)
+                        xbmc.log("Hiba a %s URL-hez tartozó felirat letöltésekor, hiba: %s" % (py2_encode(final_url), py2_encode(errMsg)), xbmc.LOGERROR)
+                else:
+                    xbmc.log("Dmdamedia: ResolveURL did not find any subtitles", xbmc.LOGINFO)
+            xbmc.log('Dmdamedia: playing URL: %s' % direct_url, xbmc.LOGINFO)
             xbmcplugin.setResolvedUrl(syshandle, True, listitem=play_item)
+        else:
+            xbmc.log('Dmdamedia: ResolveURL could not resolve url: %s' % src, xbmc.LOGINFO)
+            xbmcgui.Dialog().notification("URL feloldás hiba", "URL feloldása sikertelen a %s host-on" % urlparse.urlparse(src).hostname)
 
     def addDirectoryItem(self, name, query, thumb, icon, context=None, queue=False, isAction=True, isFolder=True, Fanart=None, meta=None, banner=None):
         url = '%s?action=%s' % (sysaddon, query) if isAction == True else query
@@ -284,3 +343,42 @@ class navigator:
             search_text = keyb.getText()
 
         return search_text
+
+    def login(self):
+        if not self.loggedin:
+            loginCookie = client.request(login_url, post='felhasznalonev=%s&jelszo=%s&submit=' % (self.username, self.password), output="cookie")
+            if loginCookie:
+                url_content = client.request(favorites_url, cookie=loginCookie)
+                file = open("/home/gavarga/dmdamedia.txt", "w")
+                file.write(url_content)
+                file.close()
+                if url_content and 'Kijelentkez' in url_content:
+                    self.loggedin = True
+                    self.loginCookie = loginCookie
+                    control.setSetting('loggedin', 'true')
+                    control.setSetting('logincookie', loginCookie)
+                    return
+            xbmcgui.Dialog().ok("Bejelentkezési hiba!", "Hiba a bejelentkezés során! Hibás felhasználó név, vagy jelszó?")
+            control.setSetting('loggedin', 'false')
+            control.setSetting('logincookie', '')
+            sys.exit(0)
+
+    def requestWithCookie(self, url, post=None):
+        url_content = client.request(url, cookie=self.loginCookie, post=post)
+        if url_content and "kijelentkezes" in url_content:
+            return url_content
+        else:
+            self.loggedin = False
+            self.login()
+            return client.request(url, cookie=self.loginCookie, post=post)
+
+    def logout(self):
+        dialog = xbmcgui.Dialog()
+        if 1 == dialog.yesno('Dmdamedia kijelentkezés', 'Valóban ki szeretnél jelentkezni?', '', ''):
+            control.setSetting('username', '')
+            control.setSetting('password', '')
+            control.setSetting('logincookie', '')
+            control.setSetting('loggedin', 'false')
+            self.loginCookie = ''
+            self.loggedin = 'false'
+            dialog.ok('Dmdamedia', u'Sikeresen kijelentkeztél.\nAz adataid törlésre kerültek a kiegészítőből.')

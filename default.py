@@ -85,3 +85,10 @@ elif action == 'basesearch':
 
 elif action == 'searchfortext':
     navigator.navigator().getSearchedItems(search)
+
+elif action == 'logout':
+    navigator.navigator().logout()
+
+elif action == 'inputStreamSettings':
+    import xbmcaddon
+    xbmcaddon.Addon(id='inputstream.adaptive').openSettings()
