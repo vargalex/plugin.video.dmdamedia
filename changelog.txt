@@ -1,4 +1,7 @@
-﻿[B]1.0.27[/B]
+﻿[B]1.0.28[/B]
+- ResolveURL feloldás bugfix
+
+[B]1.0.27[/B]
 - A bejelentkezés opcionális
 
 [B]1.0.26[/B]

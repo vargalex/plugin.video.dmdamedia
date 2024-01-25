@@ -249,7 +249,10 @@ class navigator:
         subtitles = None
         if hmf:
             resp = hmf.resolve()
-            direct_url = resp.get('url')
+            if self.downloadsubtitles:
+                direct_url = resp.get('url')
+            else:
+                direct_url = resp
             xbmc.log('Dmdamedia: ResolveURL resolved URL: %s' % direct_url, xbmc.LOGINFO)
             direct_url = py2_encode(direct_url)
             if self.downloadsubtitles:
@@ -297,7 +300,7 @@ class navigator:
                             play_item.setSubtitles(finalsubtitles)
                     except:
                         xbmcgui.Dialog().notification("Dmdamedia hiba", errMsg, xbmcgui.NOTIFICATION_ERROR)
-                        xbmc.log("Hiba a %s URL-hez tartozó felirat letöltésekor, hiba: %s" % (py2_encode(final_url), py2_encode(errMsg)), xbmc.LOGERROR)
+                        xbmc.log("Hiba a %s URL-hez tartozó felirat letöltésekor, hiba: %s" % (py2_encode(source), py2_encode(errMsg)), xbmc.LOGERROR)
                 else:
                     xbmc.log("Dmdamedia: ResolveURL did not find any subtitles", xbmc.LOGINFO)
             xbmc.log('Dmdamedia: playing URL: %s' % direct_url, xbmc.LOGINFO)
