@@ -3,9 +3,9 @@
     <category label="Bejelentkezés">
         <setting label="Felhasználónév" type="text" id="username" default=""/>
         <setting label="Jelszó" type="text" id="password" option="hidden" default=""/>
-        <setting id="logincookie" visible="false" default=""/>
         <setting id="loggedin" visible="false" default="false"/>
         <setting id="logout" type="action" label="[B][COLOR red]Kijelentkezés[/COLOR][/B]" option="close" action="RunPlugin(plugin://plugin.video.dmdamedia/?action=logout)" visible="eq(-1,true)"/>
+        <setting id="firstopen" visible="false" default="true"/>
     </category>
     <category label="Beállítások">
         <setting label="Weboldal címe" type="text" id="dmdamedia_base" default="https://dmda.media"/>

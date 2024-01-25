@@ -21,7 +21,7 @@
 
 import os,sys,re,xbmc,xbmcgui,xbmcplugin,xbmcaddon, time, locale
 import resolveurl
-from resources.lib.modules import client, control
+from resources.lib.modules import client, control, cache
 from resources.lib.modules.utils import py2_encode, py2_decode
 
 if sys.version_info[0] == 3:
@@ -49,17 +49,9 @@ class navigator:
                 pass
         self.base_path = py2_decode(control.dataPath)
         self.searchFileName = os.path.join(self.base_path, "search.history")
-        self.loggedin = False
-        if (control.setting('username') and control.setting('password')):
-            self.loggedin = control.setting('loggedin').lower() == "true"
-            self.loginCookie = control.setting('logincookie')
-        else:
-            if xbmcgui.Dialog().ok('Dmdamedia', 'A kiegészítő használatához add meg a bejelentkezési adataidat!'):
-                xbmc.executebuiltin('Dialog.Close(busydialognocancel)')
-                control.addon(control.addonInfo('id')).openSettings()
         self.username = control.setting('username').strip()
         self.password = control.setting('password').strip()
-        self.login()
+        self.loginCookie = cache.get(self.getDmdamediaCookie, 24)
         try:
             self.downloadsubtitles = xbmcaddon.Addon().getSettingBool('downloadsubtitles')
         except:
@@ -70,12 +62,13 @@ class navigator:
         self.addDirectoryItem('Filmek', 'items&url=%s%s' % (base_url, '/filmek'), '', 'DefaultFolder.png')
         self.addDirectoryItem('Sorozatok', 'items&url=%s%s' % (base_url, '/sorozatok'), '', 'DefaultFolder.png')
         self.addDirectoryItem('Kategóriák', 'categories', '', 'DefaultFolder.png')
-        self.addDirectoryItem('Kedvencek', 'items&url=%s?' % favorites_url, '', 'DefaultFolder.png')
+        if self.loginCookie:
+            self.addDirectoryItem('Kedvencek', 'items&url=%s?' % favorites_url, '', 'DefaultFolder.png')
         self.addDirectoryItem('Keresés', 'basesearch', '', 'DefaultFolder.png')
         self.endDirectory()
 
     def getCategories(self):
-        content = self.requestWithCookie(base_url)
+        content = client.request(base_url, cookie=self.loginCookie)
         catList = client.parseDOM(content, "div", attrs={'id': 'catlist'})[0]
         categories = re.findall(r'<a href="([^"]+)">([^<]+)</a>', catList)
         for category in categories:
@@ -136,13 +129,13 @@ class navigator:
             self.getSearchedItems(search_text)
 
     def getSearchedItems(self, search_text):
-        content = self.requestWithCookie("%s/%s" % (base_url, "search"), post=("search=%s" % py2_decode(search_text)))
+        content = client.request("%s/%s" % (base_url, "search"), post=("search=%s" % py2_decode(search_text)), cookie=self.loginCookie)
         center = client.parseDOM(content, "div", attrs={'class': 'center'})[0]
         self.renderItems(base_url, center, None)
         self.endDirectory()
 
     def getItems(self, url, category, order, filterparam):
-        content = self.requestWithCookie("%s%s%s" % (url, "=%s" % quote_plus(category) if category else "", order or ""))
+        content = client.request("%s%s%s" % (url, "=%s" % quote_plus(category) if category else "", order or ""), cookie=self.loginCookie)
         if order == None:
             listCont = client.parseDOM(content, "div", attrs={'class': 'list-cont'})
             if len(listCont) > 0:
@@ -173,7 +166,7 @@ class navigator:
         self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
 
     def getSeries(self, url, thumb):
-        url_content = self.requestWithCookie("%s%s" % (base_url, url))
+        url_content = client.request("%s%s" % (base_url, url), cookie=self.loginCookie)
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -193,7 +186,7 @@ class navigator:
         self.endDirectory('tvshows')
 
     def getEpisodes(self, url, thumb):
-        url_content = self.requestWithCookie("%s%s" % (base_url, url))
+        url_content = client.request("%s%s" % (base_url, url), cookie=self.loginCookie)
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -215,7 +208,7 @@ class navigator:
         self.endDirectory('episodes')
 
     def getMovie(self, url, thumb):
-        url_content = self.requestWithCookie("%s%s" % (base_url, url))
+        url_content = client.request("%s%s" % (base_url, url), cookie=self.loginCookie)
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
         if "<a" in title:
@@ -241,7 +234,7 @@ class navigator:
         self.endDirectory('movies')
 
     def playmovie(self, url):
-        url_content = self.requestWithCookie("%s%s" % (base_url, url))
+        url_content = client.request("%s%s" % (base_url, url), cookie = self.loginCookie)
         filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'filmbeagyazas'})
         if len(filmbeagyazas)>0:
             filmbeagyazas = filmbeagyazas[0]
@@ -344,38 +337,29 @@ class navigator:
 
         return search_text
 
-    def login(self):
-        if not self.loggedin:
+    def getDmdamediaCookie(self):
+        if (self.username and self.password) != "":
             loginCookie = client.request(login_url, post='felhasznalonev=%s&jelszo=%s&submit=' % (self.username, self.password), output="cookie")
             if loginCookie:
                 url_content = client.request(favorites_url, cookie=loginCookie)
                 if url_content and 'Kijelentkez' in url_content:
-                    self.loggedin = True
-                    self.loginCookie = loginCookie
                     control.setSetting('loggedin', 'true')
-                    control.setSetting('logincookie', loginCookie)
-                    return
-            xbmcgui.Dialog().ok("Bejelentkezési hiba!", "Hiba a bejelentkezés során! Hibás felhasználó név, vagy jelszó?")
-            control.setSetting('loggedin', 'false')
-            control.setSetting('logincookie', '')
-            sys.exit(0)
-
-    def requestWithCookie(self, url, post=None):
-        url_content = client.request(url, cookie=self.loginCookie, post=post)
-        if url_content and "kijelentkezes" in url_content:
-            return url_content
+                    return loginCookie
+                else:
+                    xbmcgui.Dialog().ok("Bejelentkezési hiba!", "Hiba a bejelentkezés során! Hibás felhasználó név, vagy jelszó?")
+            else:
+                xbmcgui.Dialog().ok("Bejelentkezési hiba!", "Váratlan hiba a bejelentkezés során!")
         else:
-            self.loggedin = False
-            self.login()
-            return client.request(url, cookie=self.loginCookie, post=post)
+            if control.setting('firstopen').lower() == "true":
+                xbmcgui.Dialog().ok("Regisztráció", "Figyelem! A [COLOR lightskyblue]%s[/COLOR] oldal bejelentkezés nélkül csak egyetlen forrást tesz elérhetővé, ezért ajánlott a regisztráció és a kiegészítőben a bejelentkezési adatok megadása!" % base_url)
+                control.setSetting('firstopen', 'false')
+        control.setSetting('loggedin', 'false')
+        return
 
     def logout(self):
         dialog = xbmcgui.Dialog()
         if 1 == dialog.yesno('Dmdamedia kijelentkezés', 'Valóban ki szeretnél jelentkezni?', '', ''):
             control.setSetting('username', '')
             control.setSetting('password', '')
-            control.setSetting('logincookie', '')
             control.setSetting('loggedin', 'false')
-            self.loginCookie = ''
-            self.loggedin = 'false'
             dialog.ok('Dmdamedia', u'Sikeresen kijelentkeztél.\nAz adataid törlésre kerültek a kiegészítőből.')
