@@ -342,7 +342,7 @@ class navigator:
 
     def getDmdamediaCookie(self):
         if (self.username and self.password) != "":
-            loginCookie = client.request(login_url, post='felhasznalonev=%s&jelszo=%s&submit=' % (self.username, self.password), output="cookie")
+            loginCookie = client.request(login_url, post='felhasznalonev=%s&jelszo=%s&submit=' % (quote_plus(self.username), quote_plus(self.password)), output="cookie")
             if loginCookie:
                 url_content = client.request(favorites_url, cookie=loginCookie)
                 if url_content and 'Kijelentkez' in url_content:
