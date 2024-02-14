@@ -116,7 +116,8 @@ class navigator:
             if filterparam and filterparam != "mind":
                 matched = len(client.parseDOM(sorozat, "div", attrs={'class': filterparam})) > 0
             if matched:
-                self.addDirectoryItem("%s%s" % (title, extraInfo if not filterparam or filterparam == "mind" else ""), '%s&url=%s&thumb=%s' % ("series" if extraInfo != "" or "sorozatok" in url else "movie", link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if extraInfo != "" or "sorozatok" in url else 'DefaultMovies.png')
+                action = "series" if extraInfo != "" or ("sorozatok" in url and not re.match(r".*/[0-9]+\.evad/[0-9]+\.resz", link)) else "movie"
+                self.addDirectoryItem("%s%s" % (title, extraInfo if not filterparam or filterparam == "mind" else ""), '%s&url=%s&thumb=%s' % (action, link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if action == "series" else 'DefaultMovies.png')
 
     def doSearch(self):
         search_text = self.getSearchText()
