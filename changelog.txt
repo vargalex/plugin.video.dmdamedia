@@ -1,8 +1,11 @@
-﻿[B]1.0.30[/B]
-BugFix: Legfrissebb sorozatrészek javítása
+﻿[B]1.0.31[/B]
+- Forrás változás követése
+
+[B]1.0.30[/B]
+- BugFix: Legfrissebb sorozatrészek javítása
 
 [B]1.0.29[/B]
-Bejelentkezés javítása speciális karaktert tartalmazó felhasználó név/jelszó esetén
+- Bejelentkezés javítása speciális karaktert tartalmazó felhasználó név/jelszó esetén
 
 [B]1.0.28[/B]
 - ResolveURL feloldás bugfix

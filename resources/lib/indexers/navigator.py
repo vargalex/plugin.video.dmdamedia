@@ -231,11 +231,11 @@ class navigator:
         sourceCnt = 0
         for source in sources:
             sourceCnt+=1
-            self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), source[4]), 'playmovie&url=%s%s' % (url, quote_plus(source[3])), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
+            self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), source[4]), 'playmovie&url=%s' % quote_plus(source[3]), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
         self.endDirectory('movies')
 
     def playmovie(self, url):
-        url_content = client.request("%s%s" % (base_url, url), cookie = self.loginCookie)
+        url_content = client.request(url, cookie = self.loginCookie)
         filmbeagyazas = client.parseDOM(url_content, 'div', attrs={'class': 'filmbeagyazas'})
         if len(filmbeagyazas)>0:
             filmbeagyazas = filmbeagyazas[0]
