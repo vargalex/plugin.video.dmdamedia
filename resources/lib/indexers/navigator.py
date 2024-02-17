@@ -73,7 +73,7 @@ class navigator:
         categories = re.findall(r'<a href="([^"]+)">([^<]+)</a>', catList)
         for category in categories:
             splittedHref = category[0].split("=")
-            self.addDirectoryItem(category[1], 'items&url=%s&category=%s' % (splittedHref[0], splittedHref[1]), '', 'DefaultFolder.png')
+            self.addDirectoryItem(category[1], 'items&url=%s' % category[0], '', 'DefaultFolder.png')
         self.endDirectory()
 
     def getSearches(self):
@@ -135,15 +135,15 @@ class navigator:
         self.renderItems(base_url, center, None)
         self.endDirectory()
 
-    def getItems(self, url, category, order, filterparam):
-        content = client.request("%s%s%s" % (url, "=%s" % quote_plus(category) if category else "", order or ""), cookie=self.loginCookie)
+    def getItems(self, url, order, filterparam):
+        content = client.request("%s" % url, cookie=self.loginCookie)
         if order == None:
             listCont = client.parseDOM(content, "div", attrs={'class': 'list-cont'})
             if len(listCont) > 0:
                 hrefs = client.parseDOM(listCont[0], "a")
                 for i in range(len(hrefs)):
                     href = client.parseDOM(listCont[0], "a", ret="href")[i]
-                    self.addDirectoryItem(hrefs[i], 'items&url=%s&order=%s' % (url, href), '', 'DefaultFolder.png')
+                    self.addDirectoryItem(hrefs[i], 'items&url=%s&order=%s' % (href, href), '', 'DefaultFolder.png')
                 self.endDirectory()
                 return
         center = client.parseDOM(content, "div", attrs={'class': 'center'})[0]
@@ -153,7 +153,7 @@ class navigator:
                 buttons = client.parseDOM(filterForm[0], "button", ret="value")
                 for button in buttons:
                     name = client.parseDOM(filterForm[0], "button", attrs={'value': button})[0]
-                    self.addDirectoryItem(name, 'items&url=%s&category=%s&filterparam=%s' % (url, category, button), '', 'DefaultFolder.png')
+                    self.addDirectoryItem(name, 'items&url=%s&filterparam=%s' % (url, button), '', 'DefaultFolder.png')
                 self.endDirectory()
                 return
         self.renderItems(url, center, filterparam)
@@ -161,9 +161,9 @@ class navigator:
         if len(lapozo) > 0:
             hrefs = re.findall(r'<a class="([^"]+)" href="([^"]+)">([^<]+)</a>', lapozo[0])
             if hrefs[-1][0] == "oldal":
-                nextPage = re.search(r'.*oldal=([0-9]+).*', hrefs[-1][1]).group(1)
+                nextPage = re.search(r'.*oldal/([0-9]+).*', hrefs[-1][1]).group(1)
                 allPage = hrefs[-2][2]
-                self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (url, quote_plus(hrefs[-1][1])), '', 'DefaultFolder.png')
+                self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (quote_plus(hrefs[-1][1]), quote_plus(hrefs[-1][1])), '', 'DefaultFolder.png')
         self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
 
     def getSeries(self, url, thumb):
