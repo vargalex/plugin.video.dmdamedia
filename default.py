@@ -48,8 +48,6 @@ order = params.get('order')
 
 filterparam = params.get('filterparam')
 
-category = params.get('category')
-
 if action == None:
     navigator.navigator().root()
 
@@ -57,7 +55,7 @@ elif action == 'categories':
     navigator.navigator().getCategories()
 
 elif action == 'items':
-    navigator.navigator().getItems(url, category, order, filterparam)
+    navigator.navigator().getItems(url, order, filterparam)
 
 elif action == 'movie':
     navigator.navigator().getMovie(url, thumb)
