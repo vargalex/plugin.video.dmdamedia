@@ -270,6 +270,7 @@ class navigator:
                     try:
                         play_item.setProperty('inputstream.adaptive.stream_headers', direct_url.split("|")[1])
                         play_item.setProperty('inputstream.adaptive.manifest_headers', direct_url.split("|")[1])
+                        play_item.setProperty('inputstream.adaptive.license_key', '|%s' % direct_url.split("|")[1])
                     except:
                         pass
                     play_item.setProperty('inputstream.adaptive.manifest_type', 'hls')
