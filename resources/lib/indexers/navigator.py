@@ -259,7 +259,7 @@ class navigator:
             if self.downloadsubtitles:
                 subtitles = resp.get('subs')
             play_item = xbmcgui.ListItem(path=direct_url)
-            if 'm3u8' in direct_url:
+            if 'm3u8' in direct_url and control.setting('useisa').lower() == "true":
                 from inputstreamhelper import Helper
                 is_helper = Helper('hls')
                 if is_helper.check_inputstream():

@@ -1,4 +1,7 @@
-﻿[B]1.0.33[/B]
+﻿[B]1.0.34[/B]
+- InputStream Adaptive használata kapcsolható (default true)
+
+[B]1.0.33[/B]
 - BugFix
 
 [B]1.0.32[/B]

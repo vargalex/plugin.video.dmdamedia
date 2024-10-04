@@ -12,6 +12,7 @@
         <setting label="Felirat letöltésének kísérlete" type="bool" id="downloadsubtitles" default="True"/>
     </category>
     <category label="InputStream">
-        <setting id="inputstreamsettings" type="action" label="InputStream Adaptive beállítások" option="close" action="RunPlugin(plugin://plugin.video.dmdamedia/?action=inputStreamSettings)"></setting>
+        <setting label="Inputstream adaptive használata HLS adatfolyamokhoz, ha elérhető" type="bool" id="useisa" default="true"/>
+        <setting id="inputstreamsettings" type="action" label="InputStream Adaptive beállítások" option="close" action="RunPlugin(plugin://plugin.video.dmdamedia/?action=inputStreamSettings)" visible="eq(-1,true)"/>
     </category>
 </settings>
