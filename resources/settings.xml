@@ -8,7 +8,7 @@
         <setting id="firstopen" visible="false" default="true"/>
     </category>
     <category label="Beállítások">
-        <setting label="Weboldal címe" type="text" id="dmdamedia_base" default="https://dmda.media"/>
+        <setting label="Weboldal címe" type="text" id="dmdamedia_base" default="https://dmdamedia.hu"/>
         <setting label="Felirat letöltésének kísérlete" type="bool" id="downloadsubtitles" default="True"/>
     </category>
     <category label="InputStream">

@@ -34,7 +34,7 @@ else:
 sysaddon = sys.argv[0] ; syshandle = int(sys.argv[1])
 addonFanart = xbmcaddon.Addon().getAddonInfo('fanart')
 
-base_url = 'https://dmda.media'
+base_url = control.setting('dmdamedia_base').strip()
 login_url = '%s/login' % base_url
 favorites_url = '%s/kedvencek' % base_url
 
@@ -117,7 +117,7 @@ class navigator:
                 matched = len(client.parseDOM(sorozat, "div", attrs={'class': filterparam})) > 0
             if matched:
                 action = "series" if extraInfo != "" or ("sorozatok" in url and not re.match(r".*/[0-9]+\.evad/[0-9]+\.resz", link)) else "movie"
-                self.addDirectoryItem("%s%s" % (title, extraInfo if not filterparam or filterparam == "mind" else ""), '%s&url=%s&thumb=%s' % (action, link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if action == "series" else 'DefaultMovies.png')
+                self.addDirectoryItem("%s%s" % (title, extraInfo if not filterparam or filterparam == "mind" else ""), '%s&url=%s&thumb=%s' % (action, link, thumb), "%s/%s" % (base_url, thumb), 'DefaultTVShows.png' if action == "series" else 'DefaultMovies.png', meta={'title': title})
 
     def doSearch(self):
         search_text = self.getSearchText()
@@ -164,7 +164,7 @@ class navigator:
                 nextPage = re.search(r'.*oldal/([0-9]+).*', hrefs[-1][1]).group(1)
                 allPage = hrefs[-2][2]
                 self.addDirectoryItem(u'[COLOR lightgreen]K\u00F6vetkez\u0151 oldal (%s/%s)[/COLOR]' % (nextPage, allPage), 'items&url=%s&order=%s' % (quote_plus(hrefs[-1][1]), quote_plus(hrefs[-1][1])), '', 'DefaultFolder.png')
-        self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "")
+        self.endDirectory("movies" if "filmek" in url or (filterparam and "film" in filterparam) else "tvshows" if "sorozatok" in url or (filterparam and "sorozat" in filterparam) else "movies")
 
     def getSeries(self, url, thumb):
         url_content = client.request("%s%s" % (base_url, url), cookie=self.loginCookie)
@@ -212,11 +212,13 @@ class navigator:
         url_content = client.request("%s%s" % (base_url, url), cookie=self.loginCookie)
         info = client.parseDOM(url_content, 'div', attrs={'class': 'info'})[0]
         title = py2_encode(client.replaceHTMLCodes(client.parseDOM(info, 'h1')[0])).strip()
-        if "<a" in title:
-            title = title[:title.find("<a")].strip()
-        if "</a" in title:
-            title = title[:title.find("</a")].strip()
-        plot = py2_encode(client.parseDOM(info, 'p')[0]).strip()
+        if "<" in title:
+            title = title[:title.find("<")].strip()
+        plot = re.search(r".*?<p.*?>(.*?)</p>.*", info)
+        if plot:
+            plot=py2_encode(plot.group(1)).strip()
+        else:
+            plot = ""
         tab = client.parseDOM(info, 'div', attrs={'class': 'tab'})[0]
         matches = re.search(r'^(.*)<div class="tags">(.*)hossz:</div><p>(.*)<span(.*)>(.*)\(([0-9]*)"(.*)', tab, re.S)
         duration = None
@@ -249,7 +251,12 @@ class navigator:
         hmf = resolveurl.HostedMediaFile(source, subs=self.downloadsubtitles)
         subtitles = None
         if hmf:
-            resp = hmf.resolve()
+            try:
+                resp = hmf.resolve()
+            except resolveurl.resolver.ResolverError as e:
+                xbmc.log('Dmdamedia: ResolveURL error: %s' % repr(e), xbmc.LOGINFO)
+                xbmcgui.Dialog().notification("URL feloldás hiba", "URL feloldása sikertelen a %s host-on" % urlparse.urlparse(source).hostname)
+                return
             if self.downloadsubtitles:
                 direct_url = resp.get('url')
             else:
@@ -308,8 +315,8 @@ class navigator:
             xbmc.log('Dmdamedia: playing URL: %s' % direct_url, xbmc.LOGINFO)
             xbmcplugin.setResolvedUrl(syshandle, True, listitem=play_item)
         else:
-            xbmc.log('Dmdamedia: ResolveURL could not resolve url: %s' % src, xbmc.LOGINFO)
-            xbmcgui.Dialog().notification("URL feloldás hiba", "URL feloldása sikertelen a %s host-on" % urlparse.urlparse(src).hostname)
+            xbmc.log('Dmdamedia: ResolveURL could not resolve url: %s' % source, xbmc.LOGINFO)
+            xbmcgui.Dialog().notification("URL feloldás hiba", "URL feloldása sikertelen a %s host-on" % urlparse.urlparse(source).hostname)
 
     def addDirectoryItem(self, name, query, thumb, icon, context=None, queue=False, isAction=True, isFolder=True, Fanart=None, meta=None, banner=None):
         url = '%s?action=%s' % (sysaddon, query) if isAction == True else query
