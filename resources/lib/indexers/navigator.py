@@ -220,7 +220,8 @@ class navigator:
             sourceCnt = 0
             for provider, href in zip(providers, hrefs):
                 sourceCnt+=1
-                self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), provider), 'playmovie&url=%s' % quote_plus("%s%s" % (url, href)), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
+                if "BEKÜLDÉS" not in provider:
+                    self.addDirectoryItem('%s | [B]%s[/B]' % (format(sourceCnt, '02'), provider), 'playmovie&url=%s' % quote_plus("%s%s" % (url, href)), "%s/%s" % (base_url, thumb), 'DefaultMovies.png', isFolder=False, meta={'title': title, 'plot': plot, 'duration': duration}, banner="")
         else:
             if not evad:
                 seasonsSection = client.parseDOM(url_content, "div", attrs={"class": "seasons-section"})
