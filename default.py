@@ -34,7 +34,7 @@ action = params.get('action')
 
 group = params.get('group')
 
-url = params.get('url')
+url = params.get('url') or ""
 
 search = params.get('search')
 
@@ -44,9 +44,9 @@ banner = params.get('banner')
 
 plot = params.get('plot')
 
-order = params.get('order')
+evad = params.get('evad')
 
-filterparam = params.get('filterparam')
+sorozatkod = params.get('sorozatkod')
 
 if action == None:
     navigator.navigator().root()
@@ -54,26 +54,20 @@ if action == None:
 elif action == 'categories':
     navigator.navigator().getCategories()
 
+elif action == 'actors':
+    navigator.navigator().getActors()
+
 elif action == 'items':
-    navigator.navigator().getItems(url, order, filterparam)
+    navigator.navigator().getItems(url)
 
 elif action == 'movie':
-    navigator.navigator().getMovie(url, thumb)
+    navigator.navigator().getMovie(url, evad, sorozatkod)
 
 elif action == 'playmovie':
     navigator.navigator().playmovie(url)
 
 elif action == 'search':
     navigator.navigator().doSearch()
-
-elif action == 'series':
-    navigator.navigator().getSeries(url, thumb)
-
-elif action == 'episodes':
-    navigator.navigator().getEpisodes(url, thumb)
-
-elif action == 'episode':
-    navigator.navigator().getEpisode(url, thumb, banner, plot)
 
 elif action == 'deletesearchhistory':
     navigator.navigator().deleteSearchHistory(url)
