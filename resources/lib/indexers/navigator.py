@@ -250,6 +250,8 @@ class navigator:
     def playmovie(self, url):
         url_content = client.request("%s%s" % (base_url, url), cookie = self.loginCookie)
         source = client.parseDOM(url_content, 'iframe', ret='src')[0]
+        if source.startswith("/player"):
+            source = client.request("%s%s" % (base_url, source), cookie=self.loginCookie, output="geturl")
         if any(x in source for x in ["streamwish", "filemoon", "embedwish"]):
             source = "%s$$%s" % (source, base_url)
         xbmc.log('Dmdamedia: resolving url %s with ResolveURL' % source, xbmc.LOGINFO)
